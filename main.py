@@ -1,11 +1,19 @@
 import os
 import uvicorn
+import platform
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 
 app = FastAPI()
 load_dotenv()
+
+@app.get("/check")
+async def _check():
+    print(platform.processor())
+    print(platform.architecture())
+    return {"message": "Checking"}
+
 
 @app.get("/")
 async def root():
