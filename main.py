@@ -8,10 +8,12 @@ from fastapi.responses import FileResponse
 app = FastAPI()
 load_dotenv()
 
+
 @app.get("/check")
 async def _check():
     print(platform.processor())
     print(platform.architecture())
+    print("OS Name:",os.name)
     return {"message": "Checking"}
 
 
