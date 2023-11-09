@@ -198,7 +198,7 @@ async def response(send, body=None, headers={}, status_code=None):
 async def app(scope, receive, send):
     body = await read_body(receive)
     headers = parse_headers(scope['headers'])
-    print(" Path:",scope['path'])
+    #print(" Path:",scope['path'])
     if scope['path'] == '/':
         _sock = get_socket_from_free_port()
         _sock.connect(('127.0.0.1',8080))
