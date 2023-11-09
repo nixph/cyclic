@@ -228,7 +228,7 @@ if __name__ == "__main__":
     proxy = Proxy(port=8080)
 
 
-    uvicorn.run("debug:app", host="0.0.0.0", port=8181)
+    uvicorn.run("main:app", host="0.0.0.0", port=8181)
     #config = uvicorn.Config("main:app", port=5000, log_level="info")
     #server = uvicorn.Server(config)
     #server.run()
