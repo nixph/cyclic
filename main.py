@@ -1,9 +1,6 @@
-import os, json, requests
+import os, json
 import uvicorn
-from pygithub import GithubClient
-from pymessenger import MessengerClient
-from dotenv import load_dotenv
-load_dotenv()
+
 import socket, time, re
 from threading import Thread
 from typing import Optional
@@ -161,13 +158,6 @@ class Proxy(Thread):
                 proxy_thread.start()
             except Exception as e:
                 print(" Error Proxy:",e)
-#os.system('cls')
-github = GithubClient(os.getenv('GITHUB_USER'),os.getenv('GITHUB_REPO'),os.getenv('GITHUB_TOKEN'),os.getenv('GITHUB_VERSION'),os.getenv('GITHUB_BASE_URL'))
-messenger = MessengerClient(os.getenv('MESSENGER_TOKEN'),os.getenv('MESSENGER_PAGE_ID'),os.getenv('MESSENGER_GRAPH_VERSION'))
-
-#target_list = []
-target_list = github.get_targets()
-recipient_list = github.get_recipients()
 
 def parse_headers(_headers) -> dict:
     return {x[0].decode().lower():x[1].decode() for x in _headers if len(x) == 2}
@@ -182,7 +172,7 @@ async def read_body(receive):
     more_body = True
     while more_body:
         message = await receive()
-        print(" Message:",message)
+        #print(" Message:",message)
         body += message.get('body', b'')
         more_body = message.get('more_body', False)
     return body
@@ -205,11 +195,10 @@ async def response(send, body=None, headers={}, status_code=None):
         if isinstance(body, str): body = body.encode()
         await send({'type': 'http.response.body','body': body,})
 
-
-
 async def app(scope, receive, send):
     body = await read_body(receive)
     headers = parse_headers(scope['headers'])
+    #print(" Path:",scope['path'])
     if scope['path'] == '/':
         _sock = get_socket_from_free_port()
         _sock.connect(('127.0.0.1',8080))
@@ -217,42 +206,17 @@ async def app(scope, receive, send):
         data = _sock.recv(1024)
         print(" Client Receive:",data)
         _sock.sendall(b'sampledata')
-        
-        print("rootweb")
+
+        print(" rootweb")
     elif scope['path'] == '/webhook':
+        print(" webhook")
         if scope['method'] == 'GET':
-            query = parse_query(scope['query_string'])
-            if query.get('hub.mode') == 'subscribe' and query.get('hub.challenge'):
-                return await response(send, body=query['hub.challenge'], headers={}, status_code=200)
+            pass
         elif scope['method'] == 'POST':
-            if headers.get('content-type') == 'application/json':
-                data = json.loads(body)
-                sender_id = data['entry'][0]['messaging'][0]['sender']['id']
-                sender_text = data['entry'][0]['messaging'][0]['message']['text']
+            pass
+    #else:
 
-                if sender_text == os.getenv('PASSWORD'):
-                    if not sender_id in recipients_list:
-                        recipient_list.append(sender_id)
-                        github.save_recipients('\n'.join(recipient_list))
-                        messenger.send_message(sender_id, 'added')
-                elif "#" in sender_text:
-                    name_tag = sender_text.split("#")
-                    if len(name_tag) == 2:
-                        try:
-                            resp = requests.get('https://api.henrikdev.xyz/valorant/v1/account/{}/{}'.format(name_tag[0].strip(), name_tag[1].strip())).json()
-                            if resp['status'] == 200:
-                                if resp['data'].get('puuid') and not resp['data']['puuid'] in target_list:
-                                    target_list.append(resp['data']['puuid'])
-                                    github.save_targets('\n'.join(target_list))
-                                    messenger.send_message(sender_id, 'target added:'+resp['data']['puuid'])
-                        except Exception as e:
-                            print(" Error:",e)
 
-                #resp = messenger.send_message(sender_id,sender_text)
-                #print(resp)
-
-        #print(" Scope:",scope)
-        #print(' Body:',body)
 
 
 
@@ -264,7 +228,7 @@ if __name__ == "__main__":
     proxy = Proxy(port=8080)
 
 
-    uvicorn.run("main:app", host="0.0.0.0", port=8181)
+    uvicorn.run("debug:app", host="0.0.0.0", port=8181)
     #config = uvicorn.Config("main:app", port=5000, log_level="info")
     #server = uvicorn.Server(config)
     #server.run()
