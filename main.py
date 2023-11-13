@@ -40,7 +40,7 @@ async def app(scope, receive, send):
     #await response(send, body=body)
 
 if __name__ == "__main__":
-    #proxy = Proxy(port=8080)
+    proxy = Proxy(port=8080)
     uvicorn.run("main:app", host="0.0.0.0", port=3000, log_level="critical")
     #config = uvicorn.Config("main:app", port=5000, log_level="info")
     #server = uvicorn.Server(config)
