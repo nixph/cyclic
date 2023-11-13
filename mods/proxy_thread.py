@@ -23,7 +23,7 @@ class ProxyThread(Thread):
                 _sock = socket.create_connection((_addr,_port), timeout=5)
                 print(" {} connected.".format(_addr))
             except Exception as e:
-                print(" Error:",e)
+                print(" Error ProxyThread:",e)
                 return
             print(" Sending Client Negotiation.")
             self.client_socket.sendall(b'HTTP/1.1 200 Connection established\r\n\r\n')
