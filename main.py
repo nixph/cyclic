@@ -24,7 +24,7 @@ class CliHandler(Thread):
         self.cli_socket.sendall(b"Hello World")
         #data = receive_from(self.cli_socket)
         #print(" [*] Incoming Data:",data)
-class MainHandler():
+class MainHandler(Thread):
     def __init__(self, addr='127.0.0.1', port=3000):
         Thread.__init__(self, daemon=True)
         print("")
