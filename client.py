@@ -2,7 +2,7 @@ import requests
 url = 'https://example.com'
 
 data = {
-    'key':'value'
+    'request':'base64request'
 }
 proxies = {
     'http':'http://localhost:8080',

@@ -24,33 +24,37 @@ class CliHandler(Thread):
         self.cli_socket.sendall(b"Hello World")
         #data = receive_from(self.cli_socket)
         #print(" [*] Incoming Data:",data)
-class MainHandler(Thread):
-    def __init__(self, addr='127.0.0.1', port=3000):
-        Thread.__init__(self, daemon=True)
-        print("")
-        self.addr = addr
-        self.port = port
+data_hold = []
 
-    def run(self):
-        _socket = get_socket_from_free_port(addr=self.addr,port=self.port)
-        _socket_addr = _socket.getsockname()
-        print(" [*] Started listening on {}:{}".format(_socket_addr[0],_socket_addr[1]))
-        _socket.listen(5)
-        while True:
-            try:
-                cli_socket, cli_address = _socket.accept()
-                #print(' [=] Incoming connection from %s:%d' % cli_address)
-                cli_thread = CliHandler(cli_socket, cli_address, _socket)
-                cli_thread.start()
-            except Exception as e:
-                print(" Error Proxy:",e)
+async def read_body(receive):
+    body = b''
+    more_body = True
+    while more_body:
+        message = await receive()
+        body += message.get('body', b'')
+        more_body = message.get('more_body', False)
+    return body
+
+async def app(scope, receive, send):
+    #assert scope['type'] == 'http'
+    global data_hold
+    data_hold.append('client'+str(len(data_hold)))
+
+    body = await read_body(receive)
+    print(data_hold)
+
+
+
+
+    await send({'type': 'http.response.start','status': 200,'headers': [[b'content-type', b'text/plain'],],})
+    await send({'type': 'http.response.body','body': b'Hello, World!',})
 
 
 if __name__ == "__main__":
     #main()
-    MainHandler(port=3000).start()
-    wait_for_sleep()
-    #uvicorn.run("main:app", host="0.0.0.0", port=3000, log_level="critical")
+    #MainHandler(port=3000).start()
+    #wait_for_sleep()
+    uvicorn.run("main:app", host="0.0.0.0", port=3000, log_level="critical")
     #config = uvicorn.Config("main:app", port=5000, log_level="info")
     #server = uvicorn.Server(config)
     #server.run()
