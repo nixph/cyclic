@@ -23,9 +23,9 @@ class CliHandler(Thread):
         print(' [=] Incoming connection from %s:%d' % self.cli_address)
         #data = receive_from(self.cli_socket)
         #print(" [*] Incoming Data:",data)
-class MainHandler(Thread):
+class MainHandler():
     def __init__(self, addr='127.0.0.1', port=3000):
-        Thread.__init__(self, daemon=True)
+        #Thread.__init__(self, daemon=True)
         self.addr = addr
         self.port = port
 
@@ -46,7 +46,7 @@ class MainHandler(Thread):
 
 
 if __name__ == "__main__":
-    MainHandler(port=3000).start()
+    MainHandler(port=3000).run()
     wait_for_sleep()
     #uvicorn.run("main:app", host="0.0.0.0", port=3000, log_level="critical")
     #config = uvicorn.Config("main:app", port=5000, log_level="info")
