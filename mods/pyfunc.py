@@ -1,4 +1,4 @@
-import socket
+import socket, time
 
 def get_socket_from_free_port(addr='127.0.0.1', port=None):
     _fromport = port if port else 4000
@@ -64,7 +64,12 @@ async def headers_to_list(_headers):
     return _response
 
 
-
+def wait_for_sleep():
+    try:
+        while True:
+            time.sleep(.1)
+    except KeyboardInterrupt:
+        pass
 
 
 
