@@ -1,8 +1,12 @@
 import requests
-url = 'http://localhost:8181/webhook'
+url = 'https://example.com'
 
 data = {
     'key':'value'
 }
-response = requests.post(url, json=data)
+proxies = {
+    'http':'http://localhost:8080',
+    'https':'http://localhost:8080'
+}
+response = requests.post(url, json=data, proxies=proxies)
 print(response.content)
