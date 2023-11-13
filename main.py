@@ -37,7 +37,7 @@ async def read_body(receive):
 
 async def app(scope, receive, send):
     #assert scope['type'] == 'http'
-    global data_hold
+    #global data_hold
     data_hold.append('client'+str(len(data_hold)))
 
     body = await read_body(receive)
