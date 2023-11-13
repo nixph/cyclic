@@ -3,7 +3,7 @@ import uvicorn
 import socket, time, re
 from mods.proxy import Proxy
 from threading import Thread
-from mods.pyfunc import parse_headers, parse_query, headers_to_list, read_body, get_socket_from_free_port, wait_for_sleep
+from mods.pyfunc import parse_headers, parse_query, headers_to_list, receive_from, get_socket_from_free_port, wait_for_sleep
 
 class CliHandler(Thread):
     def __init__(self, cli_socket, cli_address, server_socket):
@@ -13,6 +13,8 @@ class CliHandler(Thread):
         self.server_socket = server_socket
     def run(self):
         print(' [=] Incoming connection from %s:%d' % self.cli_address)
+        data = receive_from(self.cli_socket)
+        print(" [*] Incoming Data:",data)
 class MainHandler(Thread):
     def __init__(self, addr='127.0.0.1', port=3000):
         Thread.__init__(self, daemon=True)
