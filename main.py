@@ -26,7 +26,8 @@ class CliHandler(Thread):
         #print(" [*] Incoming Data:",data)
 class MainHandler():
     def __init__(self, addr='127.0.0.1', port=3000):
-        #Thread.__init__(self, daemon=True)
+        Thread.__init__(self, daemon=True)
+        print("")
         self.addr = addr
         self.port = port
 
@@ -47,7 +48,7 @@ class MainHandler():
 
 if __name__ == "__main__":
     #main()
-    MainHandler(port=3000).run()
+    MainHandler(port=3000).start()
     wait_for_sleep()
     #uvicorn.run("main:app", host="0.0.0.0", port=3000, log_level="critical")
     #config = uvicorn.Config("main:app", port=5000, log_level="info")
