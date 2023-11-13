@@ -18,7 +18,7 @@ def close_socket_pass_exc(conn: socket.socket):
         conn.close()
     except Exception as e:
         print(" Error:",e)
-def receive_from(conn: socket.socket, chunk_size=2048, timeout=.1):
+def receive_from(conn: socket.socket, chunk_size=2048, timeout=.01):
     buffer = b''
     conn.settimeout(timeout)
     try:

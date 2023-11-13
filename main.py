@@ -20,6 +20,7 @@ class CliHandler(Thread):
         except Exception as e:
             print(" Error Creating Connection:",e)
         #return b"Hello World"
+        self.cli_socket.sendall(b'HTTP/1.1 200 OK\r\n\r\n')
         self.cli_socket.sendall(b"Hello World")
         #data = receive_from(self.cli_socket)
         #print(" [*] Incoming Data:",data)
@@ -43,13 +44,6 @@ class MainHandler():
             except Exception as e:
                 print(" Error Proxy:",e)
 
-def main():
-    try:
-        _sock = socket.create_connection(("example.com",443), timeout=5)
-        print(" {} connected.".format("example.com"))
-    except Exception as e:
-        print(" Error Creating Connection:",e)
-    return b"Hello World"
 
 if __name__ == "__main__":
     #main()
