@@ -18,6 +18,7 @@ async def response(send, body=None, headers={}, status_code=None):
 async def app(scope, receive, send):
     body = await read_body(receive)
     headers = parse_headers(scope['headers'])
+    print(' SCOPE:',scope)
     if scope['path'] == '/':
         print(" webroot")
     elif scope['path'] == '/webhook':
@@ -26,7 +27,7 @@ async def app(scope, receive, send):
         print(" client")
         proxies = {'http':'http://localhost:8080','https':'http://localhost:8080'}
         try:
-            response = requests.get('https://example.com', proxies=proxies, timeout=10)
+            #response = requests.get('https://example.com', proxies=proxies, timeout=10)
             print(' Response:',response.content)
         except Exception as e:
             print(" Error:",e)
@@ -40,7 +41,7 @@ async def app(scope, receive, send):
     #await response(send, body=body)
 
 if __name__ == "__main__":
-    proxy = Proxy(port=8080)
+    #proxy = Proxy(port=8080)
     uvicorn.run("main:app", host="0.0.0.0", port=3000, log_level="critical")
     #config = uvicorn.Config("main:app", port=5000, log_level="info")
     #server = uvicorn.Server(config)
