@@ -1,9 +1,9 @@
 import os, json, requests
 import uvicorn
 import socket, time, re
-from lib.proxy import Proxy
+from mods.proxy import Proxy
 #from threading import Thread
-from lib.pyfunc import parse_headers, parse_query, headers_to_list, read_body
+from mods.pyfunc import parse_headers, parse_query, headers_to_list, read_body
 
 
 
@@ -27,7 +27,7 @@ async def app(scope, receive, send):
         proxies = {'http':'http://localhost:8080','https':'http://localhost:8080'}
         try:
             response = requests.get('https://example.com', proxies=proxies, timeout=10)
-            print(response.content)
+            print(' Response:',response.content)
         except Exception as e:
             print(" Error:",e)
 
@@ -40,8 +40,8 @@ async def app(scope, receive, send):
     #await response(send, body=body)
 
 if __name__ == "__main__":
-    proxy = Proxy(port=8080)
-    uvicorn.run("main:app", host="0.0.0.0", port=8181, log_level="critical")
+    #proxy = Proxy(port=8080)
+    uvicorn.run("main:app", host="0.0.0.0", port=3000, log_level="critical")
     #config = uvicorn.Config("main:app", port=5000, log_level="info")
     #server = uvicorn.Server(config)
     #server.run()

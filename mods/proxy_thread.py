@@ -1,7 +1,7 @@
 import socket
 from threading import Thread
-from lib.raw_http_parser import RawHTTPParser
-from lib.pyfunc import receive_from, close_socket_pass_exc
+from mods.raw_http_parser import RawHTTPParser
+from mods.pyfunc import receive_from, close_socket_pass_exc
 
 class ProxyThread(Thread):
     def __init__(self, client_socket, client_address, server_socket=None):

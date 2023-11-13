@@ -1,7 +1,7 @@
 
 from threading import Thread
-from lib.pyfunc import get_socket_from_free_port
-from lib.proxy_thread import ProxyThread
+from mods.pyfunc import get_socket_from_free_port
+from mods.proxy_thread import ProxyThread
 
 class Proxy(Thread):
     def __init__(self, addr='127.0.0.1', port=None):
