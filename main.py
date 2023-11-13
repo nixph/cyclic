@@ -5,6 +5,8 @@ from mods.proxy import Proxy
 from threading import Thread
 from mods.pyfunc import parse_headers, parse_query, headers_to_list, receive_from, get_socket_from_free_port, wait_for_sleep
 
+
+
 data_hold = None
 time_hold = 0
 class CliHandler(Thread):
@@ -43,11 +45,18 @@ class MainHandler():
             except Exception as e:
                 print(" Error Proxy:",e)
 
-
+def main():
+    try:
+        _sock = socket.create_connection(("example.com",443), timeout=5)
+        print(" {} connected.".format("example.com"))
+    except Exception as e:
+        print(" Error Creating Connection:",e)
+    return b"Hello World"
 
 if __name__ == "__main__":
-    MainHandler(port=3000).run()
-    wait_for_sleep()
+    main()
+    #MainHandler(port=3000).run()
+    #wait_for_sleep()
     #uvicorn.run("main:app", host="0.0.0.0", port=3000, log_level="critical")
     #config = uvicorn.Config("main:app", port=5000, log_level="info")
     #server = uvicorn.Server(config)
