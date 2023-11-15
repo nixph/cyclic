@@ -1,8 +1,10 @@
 #import asyncio
-import uvicorn, os, requests, boto3, json, datetime, pyhenrik
+import uvicorn, os, requests, boto3, json, datetime, pyhenrik, pytz
 from dotenv import load_dotenv
 from contextlib import suppress
 load_dotenv()
+old_timezone = pytz.timezone("UTC")
+new_timezone = pytz.timezone("Asia/Manila")
 
 os.environ["AWS_DEFAULT_REGION"] = os.getenv('AWS_REGION') or ""
 print(" REGION:", os.getenv('AWS_REGION'))
@@ -65,7 +67,8 @@ async def app(scope, receive, send):
                 if last_match_ts and not last_match_ts == targets[puuid].get('last_match_ts'):
                     print(" sending message.")
                     _name_tag = targets[puuid].get('name')+"#"+targets[puuid].get('tag')
-                    _dt_object = datetime.datetime.fromtimestamp(last_match_ts).strftime("%b %d, %I:%M %p")
+                    #_dt_object = datetime.datetime.fromtimestamp(last_match_ts).strftime("%b %d, %I:%M %p")
+                    _dt_object = datetime.datetime.fromtimestamp(last_match_ts).astimezone(new_timezone).strftime("%b %d, %I:%M %p")
                     if await send_message(os.getenv('MESSENGER_ID'), "{}\n{}".format(_name_tag, _dt_object)):
                         table.update_item(Key={'pk': puuid,'sk': 'sort_key'},UpdateExpression='SET last_match_ts = :val1',ExpressionAttributeValues={':val1': last_match_ts})
                         targets[puuid].update({'last_match_ts':last_match_ts})
@@ -90,8 +93,8 @@ async def app(scope, receive, send):
             print(" add target:",url)
             response = pyhenrik.get_account(url)
             if response.get('puuid'):
-                table.put_item(Item={'pk': response['puuid'],'sk': "sort_key", 'type':'target', 'name':response.get('name'), 'tag':response.get('tag'), 'region':response.get('region')})
-                targets.update({response['puuid':{'name':response['name'],'tag':response['tag'],'region':response['region']}]})
+                table.put_item(Item={'pk': response['puuid'],'sk': "sort_key", 'name':response.get('name'), 'tag':response.get('tag'), 'region':response.get('region')})
+                targets.update({response['puuid']:{'name':response['name'],'tag':response['tag'],'region':response['region']}})
             #print(response)
 
     await send({'type': 'http.response.start','status': 200,'headers': [[b'content-type', b'text/plain'],],})
