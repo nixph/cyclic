@@ -6,8 +6,8 @@ load_dotenv()
 
 #url = 'https://api.henrikdev.xyz/valorant/v3/by-puuid/matches/ap/97aa9366-45c5-5188-988c-a21d86b8aa30?size=1'
 
-url = "http://localhost:8181/add"
-data = {"name":"JUNJUN","tag":"2393"}
+url = "https://weary-ox-ring.cyclic.app/add"
+data = {"name":"Princeee","tag":"cutie"}
 response = requests.post(url, headers={'accept':'application/json'}, json=data, timeout=10)
 print(response.content)
 
