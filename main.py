@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 from contextlib import suppress
 load_dotenv()
 
+os.environ["AWS_DEFAULT_REGION"] = os.getenv('AWS_REGION') or ""
+print(" REGION:", os.getenv('AWS_REGION'))
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('weary-ox-ringCyclicDB')
 
