@@ -16,7 +16,7 @@ try:
     targets = {x['pk']:x for x in table.scan()['Items']}
 except Exception as e:
     targets = {}
-
+print(targets)
 #targets = {"0e475dc9-80fd-5133-aa64-644982b84caa":{'name':'JUNJUN','tag':'2393'}}
 
 #table_items = [{'pk':'0e475dc9-80fd-5133-aa64-644982b84caa'}]
