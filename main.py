@@ -98,6 +98,15 @@ async def app(scope, receive, send):
                 else:
                     print(" Invalid Hub Token!")
 
+        elif scope['path'] == '/delete':
+            for _pk in targets:
+                try:
+                    table.delete_item(Key={'pk': _pk,'sk':'sort_key'})
+                except Exception as e:
+                    print(" Error:",e)
+            targets = {}
+
+
 
     elif scope['method'] == 'POST':
         if scope['path'] == '/':
