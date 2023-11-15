@@ -1,33 +1,25 @@
 #import asyncio
-import uvicorn, os, requests, boto3, json, datetime
+import uvicorn, os, requests, boto3, json, datetime, pyhenrik
 from dotenv import load_dotenv
 from contextlib import suppress
 load_dotenv()
 
 os.environ["AWS_DEFAULT_REGION"] = os.getenv('AWS_REGION') or ""
 print(" REGION:", os.getenv('AWS_REGION'))
-dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table('weary-ox-ringCyclicDB')
-
-#response = table.scan().get('Items') or {}
-#for data in response:
-#    if data['type'] == 'target':
-#        print(data)
-#        response = table.delete_item(Key={'pk': data['pk'],'sk':data['sk']})
-#exit()
 try:
-    table_items = table.scan()['Items']
-    print(table_items)
-    targets = {x['pk']:x for x in table_items if x.get('type') == 'target'}
-    receivers = {x['pk'] for x in table_items if x.get('type') == 'receiver'}
-    table_items = None
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table('weary-ox-ringCyclicDB')
+except Exception as e:
+    pass
+
+try:
+    targets = {x['pk']:x for x in table.scan()['Items']}
 except Exception as e:
     targets = {}
-    receivers = []
-    print(" Error:",e)
-#print(targets)
-#print(receivers)
-#exit()
+
+#targets = {"0e475dc9-80fd-5133-aa64-644982b84caa":{'name':'JUNJUN','tag':'2393'}}
+
+#table_items = [{'pk':'0e475dc9-80fd-5133-aa64-644982b84caa'}]
 async def send_message(_id, _message):
     url = "https://graph.facebook.com/{}/{}/messages".format(os.getenv('MESSENGER_GRAPH_VERSION'),os.getenv('MESSENGER_PAGE_ID'))
     data = {'recipient':{'id':_id},'messaging_type':'RESPONSE','message':{'text':_message},'access_token':os.getenv('MESSENGER_TOKEN')}
@@ -63,6 +55,55 @@ async def app(scope, receive, send):
     body = await read_body(receive)
     query = await parse_query(scope['query_string'])
     headers = await parse_headers(scope['headers'])
+
+    if scope['method'] == 'GET':
+        if scope['path'] == '/':
+            print(" webroot get")
+            for puuid in targets:
+                print(" PUUID:",puuid)
+                last_match_ts = pyhenrik.get_last_match_ts(puuid)
+                if last_match_ts and not last_match_ts == targets[puuid].get('last_match_ts'):
+                    print(" sending message.")
+                    _name_tag = targets[puuid].get('name')+"#"+targets[puuid].get('tag')
+                    _dt_object = datetime.datetime.fromtimestamp(last_match_ts).strftime("%b %d, %I:%M %p")
+                    if await send_message(os.getenv('MESSENGER_ID'), "{}\n{}".format(_name_tag, _dt_object)):
+                        table.update_item(Key={'pk': puuid,'sk': 'sort_key'},UpdateExpression='SET last_match_ts = :val1',ExpressionAttributeValues={':val1': last_match_ts})
+                        targets[puuid].update({'last_match_ts':last_match_ts})
+                #print(last_match_ts)
+        elif scope['path'] == '/del':
+            deleted_puuid = []
+            for puuid in targets:
+                try:
+                    table.delete_item(Key={'pk': puuid,'sk':"sort_key"})
+                    deleted_puuid.append(puuid)
+                except Exception as e:
+                    print(" Error:",e)
+            for puuid in deleted_puuid:
+                with suppress(KeyError): targets.pop(puuid)
+
+
+    elif scope['method'] == 'POST':
+        if scope['path'] == '/add':
+            print(" add target")
+            with suppress(json.JSONDecodeError,TypeError): data={}; data=json.loads(body)
+            url = "https://api.henrikdev.xyz/valorant/v1/by-puuid/account/{}?force=true".format(data['puuid']) if 'puuid' in data else None
+            url = "https://api.henrikdev.xyz/valorant/v1/account/{}/{}?force=true".format(data['name'],data['tag']) if not url and 'name' in data and 'tag' in data else url
+            response = pyhenrik.get_account(url)
+            if response.get('puuid'):
+                table.put_item(Item={'pk': response['puuid'],'sk': "sort_key", 'type':'target', 'name':response.get('name'), 'tag':response.get('tag'), 'region':response.get('region')})
+                targets.update({response['puuid':{'name':response['name'],'tag':response['tag'],'region':response['region']}]})
+            #print(response)
+
+    await send({'type': 'http.response.start','status': 200,'headers': [[b'content-type', b'text/plain'],],})
+    await send({'type': 'http.response.body','body': b'Hello, World!',})
+
+
+
+async def backup_app(scope, receive, send):
+    print(" Found! Path:",scope['path'],"Method:",scope['method'])
+    body = await read_body(receive)
+    query = await parse_query(scope['query_string'])
+    headers = await parse_headers(scope['headers'])
     if scope['method'] == 'GET':
         if scope['path'] == '/':
             print(" webroot get")
@@ -87,7 +128,7 @@ async def app(scope, receive, send):
                     else:
                         print(" already sent.")
                 except Exception as e:
-                    print("Error:",e)
+                    print("Error 1:",e)
                 print(puuid)
 
         elif scope['path'] == '/webhook':
@@ -99,47 +140,22 @@ async def app(scope, receive, send):
                     print(" Invalid Hub Token!")
 
         elif scope['path'] == '/delete':
-            for _pk in targets:
-                try:
-                    table.delete_item(Key={'pk': _pk,'sk':'sort_key'})
-                except Exception as e:
-                    print(" Error:",e)
-            targets = {}
+            pass
 
 
 
     elif scope['method'] == 'POST':
         if scope['path'] == '/':
             print(" webroot post")
+        elif scope['path'] == '/add':
+            print(" target add")
         elif scope['path'] == '/webhook' and 'facebook-api-version' in headers:
             print(" webhook post")
             with suppress(json.JSONDecodeError,TypeError): data={};data=json.loads(body)
             with suppress(KeyError): sender_id=None; sender_id = data['entry'][0]['messaging'][0]['sender']['id']
             with suppress(KeyError): sender_text=""; sender_text = data['entry'][0]['messaging'][0]['message']['text']
             if sender_id and sender_text:
-                if sender_text == os.getenv('PASS'):
-                    try:
-                        table.put_item(Item={'pk': sender_id,'sk': "sort_key", 'type':'receiver'})
-                        if not sender_id in receivers: receivers.append(sender_id)
-                    except Exception as e:
-                        print(" Error:",e)
-
-                else:
-                    url = None
-                    if "#" in sender_text and len(sender_text.split("#")) == 2:
-                        url = 'https://api.henrikdev.xyz/valorant/v1/account/{}/{}?force=true'.format(sender_text.split("#")[0],sender_text.split("#")[1])
-                    if "-" in sender_text and len(sender_text.split("-")) == 5:
-                        url = "https://api.henrikdev.xyz/valorant/v1/by-puuid/account/{}?force=true".format(sender_text)
-                    if url:
-                        print(" adding target:",url)
-                        try:
-                            response = requests.get(url, headers={'accept': 'application/json'}).json()['data']
-                            table.put_item(Item={'pk': response['puuid'],'sk': "sort_key", 'type':'target', 'name':response.get('name'), 'tag':response.get('tag'), 'region':response.get('region')})
-                            #targets.append(response['puuid'])
-                            targets.update({response['puuid']:{'name':response['name'],'tag':response['tag'],'region':response['region']}})
-                            print(" target added")
-                        except Exception as e:
-                            print(" Error:",e)
+                print(sender_id, sender_text)
 
 
 

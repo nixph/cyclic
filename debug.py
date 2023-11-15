@@ -2,17 +2,18 @@ import boto3, os, requests
 from dotenv import load_dotenv
 load_dotenv()
 #print(os.getenv('AWS_ACCESS_KEY_ID'))
-dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table('amaranth-hippopotamus-sariCyclicDB')
+
 
 #url = 'https://api.henrikdev.xyz/valorant/v3/by-puuid/matches/ap/97aa9366-45c5-5188-988c-a21d86b8aa30?size=1'
 
-url = "http://localhost:8181/webhook"
-data = {"key":"pass"}
+url = "http://localhost:8181/add"
+data = {"name":"JUNJUN","tag":"2393"}
 response = requests.post(url, headers={'accept':'application/json'}, json=data, timeout=10)
 print(response.content)
 
 exit()
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table('amaranth-hippopotamus-sariCyclicDB')
 put_response = table.put_item(Item={'pk': "new_sample_puuid",'sk': "sort_key", 'last_active':2})
 print(put_response)
 #exit()
